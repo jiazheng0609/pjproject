@@ -241,10 +241,11 @@ static void keystroke_help()
     puts("| ],[ Select next/prev call    +--------------------------+-------------------+");
     puts("|  x  Xfer call                |      Media Commands:     |  Status & Config: |");
     puts("|  X  Xfer with Replaces       |                          |                   |");
-    puts("|  #  Send RFC 2833 DTMF       | cl  List ports           |  d  Dump status   |");
-    puts("|  *  Send DTMF with INFO      | cc  Connect port         | dd  Dump detailed |");
-    puts("| dq  Dump curr. call quality  | cd  Disconnect port      | dc  Dump config   |");
-    puts("|                              |  V  Adjust audio Volume  |  f  Save config   |");
+    puts("|  #  Send RFC 2833 DTMF       | cv  Change voice         |  d  Dump status   |");
+    puts("|  *  Send DTMF with INFO      | cl  List ports           | dd  Dump detailed |");
+    puts("| dq  Dump curr. call quality  | cc  Connect port         | dc  Dump config   |");
+    puts("|                              | cd  Disconnect port      |  f  Save config   |");
+    puts("|                              |  V  Adjust audio Volume  |                   |");
     puts("|  S  Send arbitrary REQUEST   | Cp  Codec priorities     |                   |");
     puts("+-----------------------------------------------------------------------------+");
 #if PJSUA_HAS_VIDEO
@@ -2001,6 +2002,9 @@ void legacy_main(void)
 
         case 'c':
             switch (menuin[1]) {
+            case 'v': // change voice 
+                printf("TODO\n");
+                break;
             case 'l':
                 ui_conf_list();
                 break;
