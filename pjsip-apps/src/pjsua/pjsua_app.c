@@ -20,24 +20,27 @@
 
 #define THIS_FILE       "pjsua_app.c"
 
+
 //#define STEREO_DEMO
 //#define TRANSPORT_ADAPTER_SAMPLE
 //#define HAVE_MULTIPART_TEST
 
 /* Ringtones                US         UK  */
-#define RINGBACK_FREQ1      440     /* 400 */
+#define RINGBACK_FREQ1      440     /* 400 */  
 #define RINGBACK_FREQ2      480     /* 450 */
 #define RINGBACK_ON         2000    /* 400 */
 #define RINGBACK_OFF        4000    /* 200 */
 #define RINGBACK_CNT        1       /* 2   */
 #define RINGBACK_INTERVAL   4000    /* 2000 */
 
-#define RING_FREQ1          800
+#define RING_FREQ1          800  
 #define RING_FREQ2          640
 #define RING_ON             200
-#define RING_OFF            100
-#define RING_CNT            3
-#define RING_INTERVAL       3000
+#define RING_OFF            100 
+/************************  modify-louise   ***************************/
+#define RING_CNT            10   // 0826 origin:3 => 改變beep頻率
+#define RING_INTERVAL       3000 // 0826 origin:3000 => 一段 beep 間隔
+/************************  end   ***************************/
 
 #define current_acc     pjsua_acc_get_default()
 
@@ -126,7 +129,11 @@ static void ring_start(pjsua_call_id call_id)
     if (++app_config.ring_cnt==1 && 
         app_config.ring_slot!=PJSUA_INVALID_ID) 
     {
+        //0826 根據 slot 修改鈴聲，如何得知 slot 是什麼 ? cli => cc， 查看 port
+        // oringinal : none => 3
+       // app_config.ring_slot = 5;
         pjsua_conf_connect(app_config.ring_slot, 0);
+        //printf("*********************slot************* %d\n", app_config.ring_slot);
     }
 }
 
@@ -599,7 +606,7 @@ static pjsip_redirect_op call_on_redirected(pjsua_call_id call_id,
         len = pjsip_uri_print(PJSIP_URI_IN_FROMTO_HDR, target, uristr, 
                               sizeof(uristr));
         if (len < 1) {
-            pj_ansi_strxcpy(uristr, "--URI too long--", sizeof(uristr));
+            pj_ansi_strcpy(uristr, "--URI too long--");
         }
 
         PJ_LOG(3,(THIS_FILE, "Call %d is being redirected to %.*s. "
@@ -1135,6 +1142,7 @@ static void simple_registrar(pjsip_rx_data *rdata)
     pjsip_tx_data *tdata;
     const pjsip_expires_hdr *exp;
     const pjsip_hdr *h;
+    unsigned cnt = 0;
     pjsip_generic_string_hdr *srv;
     pj_status_t status;
 
@@ -1164,6 +1172,7 @@ static void simple_registrar(pjsip_rx_data *rdata)
                                                                 tdata->pool, h);
                 nc->expires = e;
                 pjsip_msg_add_hdr(tdata->msg, (pjsip_hdr*)nc);
+                ++cnt;
             }
         }
         h = h->next;
@@ -1433,17 +1442,34 @@ static pj_status_t app_init(void)
         app_config.call_data[i].timer.id = PJSUA_INVALID_ID;
         app_config.call_data[i].timer.cb = &call_timeout_callback;
     }
-
+    /************************  modify-louise   ***************************/
+    //0826 wav
     /* Optionally registers WAV file */
+    app_config.wav_count = 5;  // 音樂數量
+    // C:\\Users\\user\\Downloads\\music\\music01.wav\0
+    char url[][100] = {"D:\\Users\\user\\Downloads\\music\\music01.wav\0",
+                       "D:\\Users\\user\\Downloads\\music\\music02.wav\0",
+                       "D:\\Users\\user\\Downloads\\music\\music03.wav\0",
+                       "D:\\Users\\user\\Downloads\\music\\music04.wav\0",
+                       "D:\\Users\\user\\Downloads\\music\\music05.wav\0" };
+    
+   
     for (i=0; i<app_config.wav_count; ++i) {
         pjsua_player_id wav_id;
         unsigned play_options = 0;
 
         if (app_config.auto_play_hangup)
             play_options |= PJMEDIA_FILE_NO_LOOP;
+        // MODIFY
+        pj_str_t source = { url[i],  strlen(source.ptr)};
+        // ORIGIN
+        //status = pjsua_player_create(&app_config.wav_files[i], play_options, 
+        //                             &wav_id);
+        // MODIFY
+        status = pjsua_player_create(&source, play_options,
+                                        &wav_id);
 
-        status = pjsua_player_create(&app_config.wav_files[i], play_options, 
-                                     &wav_id);
+    /************************  modify-louise   ***************************/
         if (status != PJ_SUCCESS)
             goto on_error;
 
@@ -1545,12 +1571,17 @@ static pj_status_t app_init(void)
 
         /* Ring (to alert incoming call) */
         name = pj_str("ring");
+        //app_config.media_cfg.channel_count = 2;
         status = pjmedia_tonegen_create2(app_config.pool, &name, 
                                          app_config.media_cfg.clock_rate,
                                          app_config.media_cfg.channel_count, 
                                          samples_per_frame,
                                          16, PJMEDIA_TONEGEN_LOOP, 
                                          &app_config.ring_port);
+        //0826
+        printf("==============================\n");
+        printf("channel: %d, port:%d\n", app_config.media_cfg.channel_count, app_config.ring_port);
+        printf("==============================\n");
         if (status != PJ_SUCCESS)
             goto on_error;
 
@@ -1713,7 +1744,7 @@ static pj_status_t app_init(void)
 
             app_config_init_video(&acc_cfg);
             acc_cfg.rtp_cfg = app_config.rtp_cfg;
-            // acc_cfg.ipv6_media_use = PJSUA_IPV6_ENABLED;
+            acc_cfg.ipv6_media_use = PJSUA_IPV6_ENABLED;
             pjsua_acc_modify(aid, &acc_cfg);
         }
 
@@ -1778,7 +1809,7 @@ static pj_status_t app_init(void)
 
             app_config_init_video(&acc_cfg);
             acc_cfg.rtp_cfg = app_config.rtp_cfg;
-            // acc_cfg.ipv6_media_use = PJSUA_IPV6_ENABLED;
+            acc_cfg.ipv6_media_use = PJSUA_IPV6_ENABLED;
             pjsua_acc_modify(aid, &acc_cfg);
         }
 
@@ -1846,7 +1877,7 @@ static pj_status_t app_init(void)
 
             app_config_init_video(&acc_cfg);
             acc_cfg.rtp_cfg = app_config.rtp_cfg;
-            // acc_cfg.ipv6_media_use = PJSUA_IPV6_ENABLED;
+            acc_cfg.ipv6_media_use = PJSUA_IPV6_ENABLED;
             pjsua_acc_modify(aid, &acc_cfg);
         }
 
@@ -1972,10 +2003,8 @@ pj_status_t pjsua_app_run(pj_bool_t wait_telnet_cli)
 
     /* Start console refresh thread */
     if (stdout_refresh > 0) {
-        status = pj_thread_create(app_config.pool, "stdout", 
-                                  &stdout_refresh_proc,
-                                  NULL, 0, 0, &stdout_refresh_thread);
-        PJ_ASSERT_RETURN(status==PJ_SUCCESS, status);
+        pj_thread_create(app_config.pool, "stdout", &stdout_refresh_proc,
+                         NULL, 0, 0, &stdout_refresh_thread);
     }
 
     status = pjsua_start();
