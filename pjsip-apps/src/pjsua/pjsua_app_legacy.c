@@ -1743,7 +1743,7 @@ static void ui_conf_connect(char menuin[])
         puts("ERROR!!");
     }
 }
-
+// 0826config
 static void ui_adjust_volume()
 {
     char buf[128];
@@ -1946,9 +1946,11 @@ void legacy_main(void)
         case '+':
             if (menuin[1] == 'b') {
                 ui_add_buddy();
-            } else if (menuin[1] == 'a') {
+            }
+            else if (menuin[1] == 'a') {
                 ui_add_account(&app_config.rtp_cfg);
-            } else {
+            }
+            else {
                 printf("Invalid input %s\n", menuin);
             }
             break;
@@ -2045,7 +2047,7 @@ void legacy_main(void)
 
         case 'u':
             /*
-             * Subscribe/unsubscribe presence.
+             * Subscribe/unsubscribe presence.3. 
              */
             ui_subscribe(menuin);
             break;
@@ -2110,6 +2112,49 @@ void legacy_main(void)
         case 'I': /* Handle IP change. */
             ui_handle_ip_change();
             break;
+
+         
+        /************************  modify-louise   ***************************/
+        // setting volume
+        case '1': // turn mic quiter
+            app_config.mic_level--;
+            pjsua_conf_adjust_rx_level(0, app_config.mic_level);
+            break;
+        case '2': // turn mic louder
+            app_config.mic_level++;
+            pjsua_conf_adjust_rx_level(0, app_config.mic_level);
+            break;
+        case '3': // turn speaker quiter
+            app_config.speaker_level--;
+            pjsua_conf_adjust_tx_level(0, app_config.speaker_level);
+            break;
+        case '4': // turn speaker louder
+            app_config.speaker_level++;
+            pjsua_conf_adjust_tx_level(0, app_config.speaker_level);
+            break;
+
+        // setting ring
+        // everytime create new wav file would create new 'slot'
+        // according to slots, change ring
+        case '%':
+            // defult : ring
+            if (menuin[1] == '1') {
+                app_config.ring_slot = 1;
+            }
+            else if (menuin[1] == '2') {
+                app_config.ring_slot = 2;
+            }
+            else if (menuin[1] == '3') {
+                app_config.ring_slot = 3;
+            }
+            else if (menuin[1] == '4') {
+                app_config.ring_slot = 4;
+            }
+            else if (menuin[1] == '5') {
+                app_config.ring_slot = 5;
+            }
+            break;
+        /************************  end   ***************************/
 
         default:
             if (menuin[0] != '\n' && menuin[0] != '\r') {
