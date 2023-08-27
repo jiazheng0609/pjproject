@@ -2117,8 +2117,8 @@ void legacy_main(void)
         /************************  modify-louise   ***************************/
         // setting volume
         case '1': // turn mic quiter
-            app_config.mic_level--;
-            pjsua_conf_adjust_rx_level(0, app_config.mic_level);
+            app_config.mic_level--;         
+            pjsua_conf_adjust_rx_level(0, app_config.mic_level = app_config.mic_level < 0 ? 0 : app_config.mic_level);
             break;
         case '2': // turn mic louder
             app_config.mic_level++;
@@ -2126,7 +2126,7 @@ void legacy_main(void)
             break;
         case '3': // turn speaker quiter
             app_config.speaker_level--;
-            pjsua_conf_adjust_tx_level(0, app_config.speaker_level);
+            pjsua_conf_adjust_tx_level(0, app_config.speaker_level = app_config.speaker_level < 0 ? 0 : app_config.speaker_level);
             break;
         case '4': // turn speaker louder
             app_config.speaker_level++;
