@@ -27,6 +27,7 @@
    #include "hpInput.h"
    #include "anaFilter.h"
    #include "syntFilter.h"
+    int frequency_index = 2;
 
    /*----------------------------------------------------------------*
     *  Initiation of encoder instance.
@@ -93,6 +94,9 @@
        iLBC_Enc_Inst_t *iLBCenc_inst   /* (i/o) the general encoder
                                               state */
    ){
+       
+       float* d; /*放更改過的聲音*/
+       int bass; /*頻率要乘的倍數*/
 
        float data[BLOCKL_MAX];
        float residual[BLOCKL_MAX], reverseResidual[BLOCKL_MAX];
@@ -124,6 +128,49 @@
 
        hpInput(block, iLBCenc_inst->blockl,
                    data, (*iLBCenc_inst).hpimem);
+
+       switch (frequency_index) {
+       case -2:  /*更低沉聲音*/
+           bass = 3;
+           d = malloc(sizeof(float) * (BLOCKL_MAX * 3));
+           break;
+       case -1:  /*低沉聲音*/
+           bass = 2;
+           d = malloc(sizeof(float) * (BLOCKL_MAX * 2));
+           break;
+       case 1:   /*正常聲音*/
+           d = malloc(sizeof(float) * (BLOCKL_MAX));
+           break;
+       case 2:   /*高亢聲音*/
+           d = malloc(sizeof(float) * (BLOCKL_MAX / 2));
+           break;
+       case 3:   /*更高亢聲音*/
+           d = malloc(sizeof(float) * (BLOCKL_MAX / 3));
+           break;
+       }
+       if (frequency_index > 0) {
+
+           for (int i = 0; i < BLOCKL_MAX; i += frequency_index) {
+               d[i / frequency_index] = data[i];
+           }
+           for (int f = 0; f < frequency_index; f++) {
+               for (int i = 0; i < BLOCKL_MAX / frequency_index; i++) {
+                   data[(BLOCKL_MAX / frequency_index) * f + i] = d[i];
+               }
+           }
+       }/*高音處理*/
+       else {
+           for (int i = 0; i < BLOCKL_MAX / bass; i++) {
+               for (int c = 0; c < bass; c++) {
+                   d[c + i * bass] = data[i];
+               }
+           }
+           for (int i = 0; i < BLOCKL_MAX; i++) {
+               data[i] = d[i];
+           }
+
+       }/*低音處理*/
+       free(d);
 
        /* otherwise simply copy */
 
