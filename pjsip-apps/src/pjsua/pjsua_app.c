@@ -17,7 +17,12 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
  */
 #include "pjsua_app.h"
+ /************************  modify-louise   ***************************/
 
+#include "dirent.h"
+#define MAXFILES 100
+
+/************************  end   ***************************/
 #define THIS_FILE       "pjsua_app.c"
 
 
@@ -37,10 +42,9 @@
 #define RING_FREQ2          640
 #define RING_ON             200
 #define RING_OFF            100 
-/************************  modify-louise   ***************************/
-#define RING_CNT            10   // 0826 origin:3 => §ïÅÜbeepÀW²v
-#define RING_INTERVAL       3000 // 0826 origin:3000 => ¤@¬q beep ¶¡¹j
-/************************  end   ***************************/
+#define RING_CNT            3  
+#define RING_INTERVAL       3000 
+
 
 #define current_acc     pjsua_acc_get_default()
 
@@ -129,11 +133,7 @@ static void ring_start(pjsua_call_id call_id)
     if (++app_config.ring_cnt==1 && 
         app_config.ring_slot!=PJSUA_INVALID_ID) 
     {
-        //0826 ®Ú¾Ú slot ­×§ï¹aÁn¡A¦p¦ó±oª¾ slot ¬O¤°»ò ? cli => cc¡A ¬d¬İ port
-        // oringinal : none => 3
-       // app_config.ring_slot = 5;
         pjsua_conf_connect(app_config.ring_slot, 0);
-        //printf("*********************slot************* %d\n", app_config.ring_slot);
     }
 }
 
@@ -1443,17 +1443,26 @@ static pj_status_t app_init(void)
         app_config.call_data[i].timer.cb = &call_timeout_callback;
     }
     /************************  modify-louise   ***************************/
-    //0826 wav
+
     /* Optionally registers WAV file */
-    app_config.wav_count = 5;  // ­µ¼Ö¼Æ¶q
-    // C:\\Users\\user\\Downloads\\music\\music01.wav\0
-    char url[][100] = {"D:\\Users\\user\\Downloads\\music\\music01.wav\0",
-                       "D:\\Users\\user\\Downloads\\music\\music02.wav\0",
-                       "D:\\Users\\user\\Downloads\\music\\music03.wav\0",
-                       "D:\\Users\\user\\Downloads\\music\\music04.wav\0",
-                       "D:\\Users\\user\\Downloads\\music\\music05.wav\0" };
+    DIR* d;
+    struct dirent* dir;
+    char* music_file[MAXFILES];
+    int numfiles = 0;
+    d = opendir("music");
+    if (d) {
+        while ((dir = readdir(d)) != NULL) {
+            if (dir->d_type == DT_REG && numfiles <= MAXFILES) { // æª¢æŸ¥æ˜¯å¦ç‚ºæª”æ¡ˆ ä¸” ç›®å‰è³‡æ–™å¤¾åº•ä¸‹å–åº«æœªé”100é¦–
+                music_file[numfiles] = malloc(strlen(dir->d_name) + 7);
+                // å­—ä¸²ç›¸åŠ 
+                pj_ansi_snprintf(music_file[numfiles], strlen(dir->d_name) + 7, "music/%s", dir->d_name);
+                numfiles++;
+            }
+        }
+        closedir(d);
+    }
     
-   
+    app_config.wav_count = numfiles;  // éŸ³æ¨‚æ•¸é‡
     for (i=0; i<app_config.wav_count; ++i) {
         pjsua_player_id wav_id;
         unsigned play_options = 0;
@@ -1461,15 +1470,15 @@ static pj_status_t app_init(void)
         if (app_config.auto_play_hangup)
             play_options |= PJMEDIA_FILE_NO_LOOP;
         // MODIFY
-        pj_str_t source = { url[i],  strlen(source.ptr)};
+        pj_str_t music = { music_file[i],  strlen(music.ptr)};
         // ORIGIN
         //status = pjsua_player_create(&app_config.wav_files[i], play_options, 
         //                             &wav_id);
         // MODIFY
-        status = pjsua_player_create(&source, play_options,
+        status = pjsua_player_create(&music, play_options,
                                         &wav_id);
 
-    /************************  modify-louise   ***************************/
+    /************************  END   ***************************/
         if (status != PJ_SUCCESS)
             goto on_error;
 
@@ -1490,7 +1499,14 @@ static pj_status_t app_init(void)
             }
         }
     }
+    /************************  modify-louise   ***************************/
 
+    // free
+    for (int i = 0; i < numfiles; i++) {
+        free(music_file[i]);
+    }
+
+    /************************  END   ***************************/
     /* Optionally registers tone players */
     for (i=0; i<app_config.tone_count; ++i) {
         pjmedia_port *tport;
@@ -1571,17 +1587,13 @@ static pj_status_t app_init(void)
 
         /* Ring (to alert incoming call) */
         name = pj_str("ring");
-        //app_config.media_cfg.channel_count = 2;
+
         status = pjmedia_tonegen_create2(app_config.pool, &name, 
                                          app_config.media_cfg.clock_rate,
                                          app_config.media_cfg.channel_count, 
                                          samples_per_frame,
                                          16, PJMEDIA_TONEGEN_LOOP, 
                                          &app_config.ring_port);
-        //0826
-        printf("==============================\n");
-        printf("channel: %d, port:%d\n", app_config.media_cfg.channel_count, app_config.ring_port);
-        printf("==============================\n");
         if (status != PJ_SUCCESS)
             goto on_error;
 
