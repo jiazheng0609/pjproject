@@ -381,7 +381,7 @@ static pj_status_t parse_args(int argc, char *argv[],
            OPT_TURN_TLS_PRIV_FILE, OPT_TURN_TLS_PASSWORD,
            OPT_RTCP_MUX, OPT_SRTP_KEYING,
            OPT_PLAY_FILE, OPT_PLAY_TONE, OPT_RTP_PORT, OPT_ADD_CODEC,
-           OPT_ILBC_MODE, OPT_REC_FILE, OPT_AUTO_REC,
+           OPT_ILBC_MODE, OPT_VOICE_FLAVOR, OPT_REC_FILE, OPT_AUTO_REC,
            OPT_COMPLEXITY, OPT_QUALITY, OPT_PTIME, OPT_NO_VAD,
            OPT_RX_DROP_PCT, OPT_TX_DROP_PCT, OPT_EC_TAIL, OPT_EC_OPT,
            OPT_NEXT_ACCOUNT, OPT_NEXT_CRED, OPT_MAX_CALLS,
@@ -499,6 +499,7 @@ static pj_status_t parse_args(int argc, char *argv[],
         { "ec-tail",    1, 0, OPT_EC_TAIL},
         { "ec-opt",     1, 0, OPT_EC_OPT},
         { "ilbc-mode",  1, 0, OPT_ILBC_MODE},
+        { "voice-flavor" , 1, 0, OPT_VOICE_FLAVOR},
         { "rx-drop-pct",1, 0, OPT_RX_DROP_PCT},
         { "tx-drop-pct",1, 0, OPT_TX_DROP_PCT},
         { "next-account",0,0, OPT_NEXT_ACCOUNT},
@@ -1297,6 +1298,15 @@ static pj_status_t parse_args(int argc, char *argv[],
             if (cfg->media_cfg.ilbc_mode!=20 && cfg->media_cfg.ilbc_mode!=30) {
                 PJ_LOG(1,(THIS_FILE,
                           "Error: invalid --ilbc-mode (expecting 20 or 30"));
+                return -1;
+            }
+            break;
+
+        case OPT_VOICE_FLAVOR:
+            cfg->media_cfg.voice_flavor = my_atoi(pj_optarg);
+            if (cfg->media_cfg.voice_flavor < -2 && cfg->media_cfg.voice_flavor > 3) {
+                PJ_LOG(1, (THIS_FILE,
+                    "Error: invalid --voice-flavor (expecting -2, -1, 1, 2 or 3, now: %d)", cfg->media_cfg.voice_flavor));
                 return -1;
             }
             break;
@@ -2254,6 +2264,18 @@ int write_settings(pjsua_app_config *config, char *buf, pj_size_t max)
     } else {
         pj_ansi_sprintf(line, "#using default --ilbc-mode %d\n",
                         config->media_cfg.ilbc_mode);
+        pj_strcat2(&cfg, line);
+    }
+
+    /* change-voice */
+    if (config->media_cfg.voice_flavor != 1) {
+        pj_ansi_sprintf(line, "--voice-flavor %d\n",
+            config->media_cfg.voice_flavor);
+        pj_strcat2(&cfg, line);
+    }
+    else {
+        pj_ansi_sprintf(line, "#using default --voice-flavor %d\n",
+            config->media_cfg.voice_flavor);
         pj_strcat2(&cfg, line);
     }
 

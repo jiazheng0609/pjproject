@@ -162,6 +162,9 @@
        /* state of input HP filter */
        float hpimem[4];
 
+       /* used to change voice */
+       int voice_flavor;
+
    } iLBC_Enc_Inst_t;
 
    /* type definition decoder instance */

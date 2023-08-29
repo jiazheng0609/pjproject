@@ -6897,6 +6897,14 @@ struct pjsua_media_config
     unsigned            ilbc_mode;
 
     /**
+    * Change voice flavor (only effective in iLBC codec encode)
+    * 
+    * Default: 1 (Normal sound)
+    * Availble options: -2, -1, 1, 2, 3 (Low pitch to high pitch)
+    */
+    int            voice_flavor;
+
+    /**
      * Percentage of RTP packet to drop in TX direction
      * (to simulate packet lost).
      *

@@ -129,6 +129,8 @@
        hpInput(block, iLBCenc_inst->blockl,
                    data, (*iLBCenc_inst).hpimem);
 
+       frequency_index = (*iLBCenc_inst).voice_flavor;
+
        switch (frequency_index) {
        case -2:  /*更低沉聲音*/
            bass = 3;
