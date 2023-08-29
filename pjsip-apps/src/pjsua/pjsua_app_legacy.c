@@ -239,10 +239,11 @@ static void keystroke_help()
     puts("| ],[ Select next/prev call    +--------------------------+-------------------+");
     puts("|  x  Xfer call                |      Media Commands:     |  Status & Config: |");
     puts("|  X  Xfer with Replaces       |                          |                   |");
-    puts("|  #  Send RFC 2833 DTMF       | cl  List ports           |  d  Dump status   |");
-    puts("|  *  Send DTMF with INFO      | cc  Connect port         | dd  Dump detailed |");
-    puts("| dq  Dump curr. call quality  | cd  Disconnect port      | dc  Dump config   |");
-    puts("|                              |  V  Adjust audio Volume  |  f  Save config   |");
+    puts("|  #  Send RFC 2833 DTMF       | cv  Change voice         |  d  Dump status   |");
+    puts("|  *  Send DTMF with INFO      | cl  List ports           | dd  Dump detailed |");
+    puts("| dq  Dump curr. call quality  | cc  Connect port         | dc  Dump config   |");
+    puts("|                              | cd  Disconnect port      |  f  Save config   |");
+    puts("|                              |  V  Adjust audio Volume  |                   |");
     puts("|  S  Send arbitrary REQUEST   | Cp  Codec priorities     |                   |");
     puts("+-----------------------------------------------------------------------------+");
 #if PJSUA_HAS_VIDEO
@@ -1593,6 +1594,87 @@ static void ui_change_online_status()
 }
 
 /*
+ * Change voice by NCNU VoIP Summer Class Final Project.
+ */
+static void ui_change_voice()
+{
+    char menuin[32];
+    pj_bool_t online_status;
+    pjrpid_element elem;
+    int choice;
+    unsigned i;
+
+    enum {
+        NORMAL, A, B, C, D, E, F, OPT_MAX
+    };
+
+    struct opt {
+        int id;
+        char* name;
+    } opts[] = {
+        { NORMAL, "Normal" },
+        { A, "A"},
+        { B, "B"},
+        { C, "C"},
+        { D, "D"},
+        { E, "E"},
+        { F, "F"}
+    };
+
+    printf("\n"
+        "Choices:\n");
+    for (i = 0; i < (unsigned)PJ_ARRAY_SIZE(opts); ++i) {
+        printf("  %d  %s\n", opts[i].id + 1, opts[i].name);
+    }
+
+    if (!simple_input("Select voice flavor", menuin, sizeof(menuin)))
+        return;
+
+    choice = atoi(menuin) - 1;
+    if (choice < 0 || choice >= OPT_MAX) {
+        puts("Invalid selection");
+        return;
+    }
+
+    pj_bzero(&elem, sizeof(elem));
+    elem.type = PJRPID_ELEMENT_TYPE_PERSON;
+
+    online_status = PJ_TRUE;
+
+    switch (choice) {
+    case NORMAL:
+        break;
+    case A:
+        elem.activity = PJRPID_ACTIVITY_BUSY;
+        elem.note = pj_str("Busy");
+        break;
+    case B:
+        elem.activity = PJRPID_ACTIVITY_BUSY;
+        elem.note = pj_str("On the phone");
+        break;
+    case C:
+        elem.activity = PJRPID_ACTIVITY_UNKNOWN;
+        elem.note = pj_str("Idle");
+        break;
+    case D:
+        elem.activity = PJRPID_ACTIVITY_AWAY;
+        elem.note = pj_str("Away");
+        break;
+    case E:
+        elem.activity = PJRPID_ACTIVITY_UNKNOWN;
+        elem.note = pj_str("Be right back");
+        break;
+    case F:
+        online_status = PJ_FALSE;
+        break;
+    }
+
+    //pjsua_acc_set_online_status2(current_acc, online_status, &elem);
+}
+
+
+
+/*
  * List the ports in conference bridge
  */
 static void ui_conf_list()
@@ -2004,6 +2086,9 @@ void legacy_main(void)
 
         case 'c':
             switch (menuin[1]) {
+            case 'v': // change voice 
+                ui_change_voice();
+                break;
             case 'l':
                 ui_conf_list();
                 break;
