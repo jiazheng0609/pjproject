@@ -19,7 +19,10 @@
 
 #include <pjsua-lib/pjsua.h>
 #include "pjsua_app_common.h"
-
+ /************************  modify-louise   ***************************/
+#include "dirent.h"
+#define MAXFILES 100
+/************************  end   ***************************/
 #define THIS_FILE       "pjsua_app_legacy.c"
 
 
@@ -1670,6 +1673,7 @@ static void ui_change_voice()
 }
 
 
+
 /*
  * List the ports in conference bridge
  */
@@ -1901,6 +1905,22 @@ void legacy_main(void)
         call_opt.aud_cnt = app_config.aud_cnt;
         call_opt.vid_cnt = app_config.vid.vid_cnt;
 
+        /************************  modify-louise   ***************************/
+
+        DIR* d;
+        struct dirent* dir;
+        char* music_file[MAXFILES];
+        int numfiles = 0;
+        d = opendir("music");
+        
+        while ((dir = readdir(d)) != NULL) {
+            if (dir->d_type == DT_REG && numfiles <= MAXFILES) { // 檢查是否為檔案 且 目前資料夾底下取庫未達100首
+                numfiles++;
+            }
+        }
+        closedir(d);
+
+        /************************  end   ***************************/
         switch (menuin[0]) {
 
         case 'm':
@@ -2117,8 +2137,8 @@ void legacy_main(void)
         /************************  modify-louise   ***************************/
         // setting volume
         case '1': // turn mic quiter
-            app_config.mic_level--;
-            pjsua_conf_adjust_rx_level(0, app_config.mic_level);
+            app_config.mic_level--;         
+            pjsua_conf_adjust_rx_level(0, app_config.mic_level = app_config.mic_level < 0 ? 0 : app_config.mic_level);
             break;
         case '2': // turn mic louder
             app_config.mic_level++;
@@ -2126,7 +2146,7 @@ void legacy_main(void)
             break;
         case '3': // turn speaker quiter
             app_config.speaker_level--;
-            pjsua_conf_adjust_tx_level(0, app_config.speaker_level);
+            pjsua_conf_adjust_tx_level(0, app_config.speaker_level = app_config.speaker_level < 0 ? 0 : app_config.speaker_level);
             break;
         case '4': // turn speaker louder
             app_config.speaker_level++;
@@ -2138,21 +2158,10 @@ void legacy_main(void)
         // according to slots, change ring
         case '%':
             // defult : ring
-            if (menuin[1] == '1') {
-                app_config.ring_slot = 1;
-            }
-            else if (menuin[1] == '2') {
-                app_config.ring_slot = 2;
-            }
-            else if (menuin[1] == '3') {
-                app_config.ring_slot = 3;
-            }
-            else if (menuin[1] == '4') {
-                app_config.ring_slot = 4;
-            }
-            else if (menuin[1] == '5') {
-                app_config.ring_slot = 5;
-            }
+            if (menuin[1] - '0' >= 1 && menuin[1] - '0' <= numfiles) {
+                app_config.ring_slot = menuin[1] - '0';
+               
+            } 
             break;
         /************************  end   ***************************/
 
