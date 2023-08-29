@@ -1357,7 +1357,7 @@ static pj_status_t app_init(void)
     pjsua_transport_id transport_id = -1;
     pjsua_transport_config tcp_cfg;
     unsigned i;
-    pj_pool_t *tmp_pool;
+    pj_pool_t* tmp_pool;
     pj_status_t status;
 
     /** Create pjsua **/
@@ -1421,7 +1421,7 @@ static pj_status_t app_init(void)
 
     /* Initialize pjsua */
     status = pjsua_init(&app_config.cfg, &app_config.log_cfg,
-                        &app_config.media_cfg);
+        &app_config.media_cfg);
     if (status != PJ_SUCCESS) {
         pj_pool_release(tmp_pool);
         return status;
@@ -1429,7 +1429,7 @@ static pj_status_t app_init(void)
 
     /* Initialize our module to handle otherwise unhandled request */
     status = pjsip_endpt_register_module(pjsua_get_pjsip_endpt(),
-                                         &mod_default_handler);
+        &mod_default_handler);
     if (status != PJ_SUCCESS)
         return status;
 
@@ -1438,7 +1438,7 @@ static pj_status_t app_init(void)
 #endif
 
     /* Initialize calls data */
-    for (i=0; i<PJ_ARRAY_SIZE(app_config.call_data); ++i) {
+    for (i = 0; i < PJ_ARRAY_SIZE(app_config.call_data); ++i) {
         app_config.call_data[i].timer.id = PJSUA_INVALID_ID;
         app_config.call_data[i].timer.cb = &call_timeout_callback;
     }
@@ -1450,17 +1450,17 @@ static pj_status_t app_init(void)
     char* music_file[MAXFILES];
     int numfiles = 0;
     d = opendir("music");
-    if (d) {
-        while ((dir = readdir(d)) != NULL) {
-            if (dir->d_type == DT_REG && numfiles <= MAXFILES) { // 檢查是否為檔案 且 目前資料夾底下取庫未達100首
-                music_file[numfiles] = malloc(strlen(dir->d_name) + 7);
-                // 字串相加
-                pj_ansi_snprintf(music_file[numfiles], strlen(dir->d_name) + 7, "music/%s", dir->d_name);
-                numfiles++;
-            }
+
+    while ((dir = readdir(d)) != NULL) {
+        if (dir->d_type == DT_REG && numfiles <= MAXFILES) { // 檢查是否為檔案 且 目前資料夾底下取庫未達100首
+            music_file[numfiles] = malloc(strlen(dir->d_name) + 7);
+            // 字串相加
+            pj_ansi_snprintf(music_file[numfiles], strlen(dir->d_name) + 7, "music/%s", dir->d_name);
+            numfiles++;
         }
-        closedir(d);
     }
+    closedir(d);
+
     
     app_config.wav_count = numfiles;  // 音樂數量
     for (i=0; i<app_config.wav_count; ++i) {
