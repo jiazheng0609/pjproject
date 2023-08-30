@@ -2172,10 +2172,11 @@ void legacy_main(void)
                     if (app_config.ring_slot > numfiles)
                         app_config.ring_slot = numfiles + 2;
                 }
-               
+                printf("Changed to ringtone #%d\n", app_config.ring_slot);
             }
             else {
                 app_config.ring_slot = numfiles + 2;
+                printf("Invalid ringtone option (min:1, max: %d), fallback to default ring.\n", numfiles);
             } 
             break;
         /************************  end   ***************************/
