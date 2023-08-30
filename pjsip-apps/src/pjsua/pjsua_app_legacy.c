@@ -2160,11 +2160,24 @@ void legacy_main(void)
             // defult : ring
             if (menuin[1] - '0' >= 1 && menuin[1] - '0' <= numfiles) {
                 app_config.ring_slot = menuin[1] - '0';
-                printf("Changed to ringtone #%d\n", menuin[1] - '0');
+                if (menuin[2] - '0' >= 0 && app_config.ring_slot <= numfiles) {         
+                    app_config.ring_slot *= 10;
+                    app_config.ring_slot += menuin[2] - '0';
+                    if (app_config.ring_slot > numfiles)
+                        app_config.ring_slot = numfiles + 2;
+                }
+                if (menuin[3] - '0' >= 0 && app_config.ring_slot <= numfiles) {                   
+                    app_config.ring_slot *= 10;
+                    app_config.ring_slot += menuin[3] - '0';
+                    if (app_config.ring_slot > numfiles)
+                        app_config.ring_slot = numfiles + 2;
+                }
+                printf("Changed to ringtone #%d\n", app_config.ring_slot);
             }
             else {
-                printf("Invalid ringtone option! (min:1, max: %d)\n", numfiles);
-            }
+                app_config.ring_slot = numfiles + 2;
+                printf("Invalid ringtone option (min:1, max: %d), fallback to default ring.\n", numfiles);
+            } 
             break;
         /************************  end   ***************************/
 
