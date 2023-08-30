@@ -1599,13 +1599,11 @@ static void ui_change_online_status()
 static void ui_change_voice()
 {
     char menuin[32];
-    pj_bool_t online_status;
-    pjrpid_element elem;
     int choice;
     unsigned i;
 
     enum {
-        NORMAL, A, B, C, D, E, F, OPT_MAX
+        NORMAL, LOWER, LOW, HIGH, HIGHER, OPT_MAX
     };
 
     struct opt {
@@ -1613,12 +1611,10 @@ static void ui_change_voice()
         char* name;
     } opts[] = {
         { NORMAL, "Normal" },
-        { A, "A"},
-        { B, "B"},
-        { C, "C"},
-        { D, "D"},
-        { E, "E"},
-        { F, "F"}
+        { LOWER, "Lower"},
+        { LOW, "Low"},
+        { HIGH, "High"},
+        { HIGHER, "Higher"}
     };
 
     printf("\n"
@@ -1636,39 +1632,21 @@ static void ui_change_voice()
         return;
     }
 
-    pj_bzero(&elem, sizeof(elem));
-    elem.type = PJRPID_ELEMENT_TYPE_PERSON;
 
-    online_status = PJ_TRUE;
+    
+    
+    pj_str_t codec_id;
+    pjmedia_codec_param param;
+    char flavor_str;
+    codec_id = pj_str("iLBC/8000/1");
+    pj_utoa(choice, &flavor_str);
 
-    switch (choice) {
-    case NORMAL:
-        break;
-    case A:
-        elem.activity = PJRPID_ACTIVITY_BUSY;
-        elem.note = pj_str("Busy");
-        break;
-    case B:
-        elem.activity = PJRPID_ACTIVITY_BUSY;
-        elem.note = pj_str("On the phone");
-        break;
-    case C:
-        elem.activity = PJRPID_ACTIVITY_UNKNOWN;
-        elem.note = pj_str("Idle");
-        break;
-    case D:
-        elem.activity = PJRPID_ACTIVITY_AWAY;
-        elem.note = pj_str("Away");
-        break;
-    case E:
-        elem.activity = PJRPID_ACTIVITY_UNKNOWN;
-        elem.note = pj_str("Be right back");
-        break;
-    case F:
-        online_status = PJ_FALSE;
-        break;
-    }
 
+    pjsua_codec_get_param(&codec_id, &param);
+    param.setting.enc_fmtp.cnt = 2;
+    param.setting.enc_fmtp.param[1].name = pj_str("voice-flavor");
+    param.setting.enc_fmtp.param[1].val = pj_str(&flavor_str);
+    pjsua_codec_set_param(&codec_id, &param);
     //pjsua_acc_set_online_status2(current_acc, online_status, &elem);
 }
 

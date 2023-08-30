@@ -49,6 +49,7 @@
 #define THIS_FILE       "ilbc.c"
 #define CLOCK_RATE      8000
 #define DEFAULT_MODE    30
+#define DEFAULT_FLAVOR  1
 
 
 /* Prototypes for iLBC factory */
@@ -422,6 +423,7 @@ static pj_status_t ilbc_codec_open(pjmedia_codec *codec,
     unsigned i;
     pj_uint16_t dec_fmtp_mode = DEFAULT_MODE, 
                 enc_fmtp_mode = DEFAULT_MODE;
+    int voice_flavor = DEFAULT_FLAVOR;
 
 #if defined(PJMEDIA_ILBC_CODEC_USE_COREAUDIO)&& PJMEDIA_ILBC_CODEC_USE_COREAUDIO
     AudioStreamBasicDescription srcFormat, dstFormat;
@@ -505,6 +507,16 @@ static pj_status_t ilbc_codec_open(pjmedia_codec *codec,
         return PJMEDIA_CODEC_EFAILED;
     ilbc_codec->enc_frame_size = (enc_fmtp_mode == 20? 38 : 50);
 #else
+    /* Get encoder voice flavor */
+    pj_str_t STR_FLAVOR = { "voice-flavor", 12 };
+    for (i = 0; i < attr->setting.enc_fmtp.cnt; ++i) {
+        if (pj_stricmp(&attr->setting.enc_fmtp.param[i].name, &STR_FLAVOR) == 0)
+        {
+            voice_flavor = pj_strtol(&attr->setting.enc_fmtp.param[i].val);
+            break;
+        }
+    }
+    ilbc_codec->enc.voice_flavor = voice_flavor;
     ilbc_codec->enc_frame_size = initEncode(&ilbc_codec->enc, enc_fmtp_mode);
 #endif
     ilbc_codec->enc_samples_per_frame = CLOCK_RATE * enc_fmtp_mode / 1000;
@@ -567,6 +579,7 @@ static pj_status_t  ilbc_codec_modify(pjmedia_codec *codec,
                                       const pjmedia_codec_param *attr )
 {
     struct ilbc_codec *ilbc_codec = (struct ilbc_codec*)codec;
+    //ilbc_codec->enc.voice_flavor = 2;
 
     ilbc_codec->plc_enabled = (attr->setting.plc != 0);
     ilbc_codec->vad_enabled = (attr->setting.vad != 0);
@@ -750,6 +763,8 @@ static pj_status_t ilbc_codec_encode(pjmedia_codec *codec,
             ilbc_codec->enc_block[i] = (float) (*pcm_in++);
         }
         
+       //ilbc_codec->enc.voice_flavor = 2;
+
         iLBC_encode((unsigned char *)output->buf + output->size,
                     ilbc_codec->enc_block,
                     &ilbc_codec->enc);
