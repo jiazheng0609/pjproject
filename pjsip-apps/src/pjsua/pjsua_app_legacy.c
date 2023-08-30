@@ -2160,7 +2160,22 @@ void legacy_main(void)
             // defult : ring
             if (menuin[1] - '0' >= 1 && menuin[1] - '0' <= numfiles) {
                 app_config.ring_slot = menuin[1] - '0';
+                if (menuin[2] - '0' >= 0 && app_config.ring_slot <= numfiles) {         
+                    app_config.ring_slot *= 10;
+                    app_config.ring_slot += menuin[2] - '0';
+                    if (app_config.ring_slot > numfiles)
+                        app_config.ring_slot = numfiles + 2;
+                }
+                if (menuin[3] - '0' >= 0 && app_config.ring_slot <= numfiles) {                   
+                    app_config.ring_slot *= 10;
+                    app_config.ring_slot += menuin[3] - '0';
+                    if (app_config.ring_slot > numfiles)
+                        app_config.ring_slot = numfiles + 2;
+                }
                
+            }
+            else {
+                app_config.ring_slot = numfiles + 2;
             } 
             break;
         /************************  end   ***************************/
