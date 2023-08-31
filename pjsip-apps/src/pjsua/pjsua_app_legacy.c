@@ -250,8 +250,9 @@ static void keystroke_help()
     puts("| Video: \"vid help\" for more info                                             |");
     puts("+-----------------------------------------------------------------------------+");
 #endif
+    puts("|  1  Mic Vol-- 2  Mic Vol++    3  Speaker Vol-- 4  Speaker Vol++             |");
     puts("|  q  QUIT      L  ReLoad       I  IP change     n  detect NAT type           |");
-    puts("|  sleep MS     echo [0|1|txt]                                                |");
+    puts("|  sleep MS     echo [0|1|txt]  %n Ringtone change                            |");
     puts("+=============================================================================+");
 
     i = pjsua_call_get_count();
